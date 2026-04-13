@@ -1,1 +1,1 @@
-sample project implement a simple agent
+sample project implementing a simple agent
