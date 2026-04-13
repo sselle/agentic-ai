@@ -33,7 +33,7 @@ llm = ChatAnthropic(model="claude-haiku-4-5-20251001", temperature=0)
 agent = create_agent(
     model = llm, 
     tools = tools,
-    system_prompt = "You are a helpful assistant. Be concise and accurate. Say it if you cannot answer a specific question")
+    system_prompt = "You are a helpful assistant. Be concise and accurate.")
 
 # run it. recursion limit == max iterations
 response = agent.invoke(
