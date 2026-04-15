@@ -1,0 +1,185 @@
+Author an AI agent and deploy it on Databricks Apps
+Build an AI agent and deploy it using Databricks Apps. Databricks Apps gives you full control over the agent code, server configuration, and deployment workflow. This approach is ideal when you need custom server behavior, git-based versioning, or local IDE development.
+
+Agent chat UI preview
+
+Every conversational agent template includes a built-in chat UI (shown above) with no additional setup required. The chat UI supports streaming responses, markdown rendering, Databricks authentication, and optional persistent chat history.
+
+Requirements
+Enable Databricks Apps in your workspace. See Set up your Databricks Apps workspace and development environment.
+
+Step 1. Clone the agent app template
+Get started by using a pre-built agent template from the Databricks app templates repository.
+
+This tutorial uses the agent-openai-agents-sdk template, which includes:
+
+An agent created using OpenAI Agent SDK
+Starter code for an agent application with a conversational REST API and an interactive chat UI
+Code to evaluate the agent using MLflow
+Choose one of the following paths to set up the template:
+
+Workspace UI
+Clone from GitHub
+Install the app template using the Workspace UI. This installs the app and deploys it to a compute resource in your workspace. You can then sync the application files to your local environment for further development.
+
+In your Databricks workspace, click + New > App.
+
+Click Agents > Agent - OpenAI Agents SDK.
+
+Create a new MLflow experiment with the name openai-agents-template and complete the rest of the set up to install the template.
+
+After you create the app, click the app URL to open the chat UI.
+
+After you create the app, download the source code to your local machine to customize it:
+
+Copy the first command under Sync the files
+
+Sync files Databricks Apps
+
+In a local terminal, run the copied command.
+
+Step 2. Understand the agent application
+The agent template demonstrates a production-ready architecture with these key components. Open the following sections for more details about each component:
+
+Agent on App simple diagram
+
+Open the following sections for more details about each component:
+
+Chat icon Built-in chat UI
+
+Chip icon. MLflow AgentServer
+
+Brackets square icon. ResponsesAgent interface
+
+Robot icon. OpenAI Agents SDK
+
+Mcp icon. MCP (Model Context Protocol) servers
+
+Author agents using AI coding assistants
+Databricks recommends using AI coding assistants such as Claude, Cursor, and Copilot to author agents. Use the provided agent skills, in /.claude/skills, and the AGENTS.md file to help AI assistants understand the project structure, available tools, and best practices. Agents can automatically read those files to develop and deploy the Databricks Apps.
+
+Step 3. Add tools to your agent
+Give your agent capabilities like querying databases, searching documents, or calling external APIs by connecting it to MCP servers. The agent template includes a default MCP server connection. To add more tools, configure additional MCP servers in your agent code and grant the required permissions in databricks.yml.
+
+See AI agent tools for supported tool types and code examples.
+
+Define local Python function tools
+For operations that don't require external data sources or APIs, define tools directly in your agent code. These tools run in the same process as your agent and are useful for data transformations, calculations, or utility operations.
+
+OpenAI Agents SDK
+LangGraph
+Use the @function_tool decorator from the OpenAI Agents SDK:
+
+Python
+from agents import Agent, function_tool
+
+@function_tool
+def get_current_time() -> str:
+    """Get the current date and time."""
+    from datetime import datetime
+    return datetime.now().isoformat()
+
+agent = Agent(
+    name="My agent",
+    instructions="You are a helpful assistant.",
+    model="databricks-claude-sonnet-4-5",
+    tools=[get_current_time],
+)
+
+Local function tools don't require resource grants in databricks.yml because they run within the agent process.
+
+Advanced authoring topics
+Streaming responses
+
+Custom inputs and outputs
+
+Custom retriever schemas
+
+Step 4. Run the agent app locally
+Set up your local environment:
+
+Install uv (Python package manager), nvm (Node version manager), and the Databricks CLI:
+
+uv installation
+nvm installation
+Run the following to use Node 20 LTS:
+Bash
+nvm use 20
+
+databricks CLI installation
+Change directory to the agent-openai-agents-sdk folder.
+
+Run the provided quickstart scripts to install dependencies, set up your environment, and start the app.
+
+Bash
+uv run quickstart
+uv run start-app
+
+In a browser, go to http://localhost:8000 to open the built-in chat UI and start chatting with the agent.
+
+Step 5. Configure authentication
+Your agent needs authentication to access Databricks resources. Databricks Apps provides two authentication methods:
+
+App authorization (default)
+User authorization
+App authorization uses a service principal that Databricks automatically creates for your app. All users share the same permissions.
+
+Grant permissions to the MLflow experiment:
+
+Click Edit on your app home page.
+Navigate to the Configure step.
+In the App resources section, add the MLflow experiment resource with Can Edit permission.
+For other resources (Vector Search, Genie spaces, serving endpoints), add them the same way in the App resources section.
+
+See App authorization for more details.
+
+Step 6. Evaluate the agent
+The template includes agent evaluation code. See agent_server/evaluate_agent.py for more information. Evaluate the relevance and safety of your agent's responses by running the following in a terminal:
+
+Bash
+uv run agent-evaluate
+
+Step 7. Deploy the agent to Databricks Apps
+After configuring authentication, deploy your agent to Databricks. Ensure you have the Databricks CLI installed and configured.
+
+If you cloned the repository locally, create the Databricks app before deploying it. If you created your app through the workspace UI, skip this step as the app and MLflow experiment are already configured.
+
+Bash
+databricks apps create agent-openai-agents-sdk
+
+Sync local files to your workspace. See Deploy the app.
+
+Bash
+DATABRICKS_USERNAME=$(databricks current-user me | jq -r .userName)
+databricks sync . "/Users/$DATABRICKS_USERNAME/agent-openai-agents-sdk"
+
+Deploy your Databricks App.
+
+Bash
+databricks apps deploy agent-openai-agents-sdk --source-code-path /Workspace/Users/$DATABRICKS_USERNAME/agent-openai-agents-sdk
+
+
+For future updates to the agent, sync and redeploy your agent.
+
+Step 8. Query the deployed agent
+The following example uses a quick curl request with an OAuth token. Personal access tokens (PATs) are not supported for Databricks Apps.
+
+For the full list of query methods, including the Databricks OpenAI Client and REST API, see Query an agent deployed on Databricks.
+
+Generate an OAuth token using the Databricks CLI:
+
+Bash
+databricks auth login --host <https://host.databricks.com>
+databricks auth token
+
+Use the token to query the agent:
+
+Bash
+curl -X POST <app-url.databricksapps.com>/invocations \
+   -H "Authorization: Bearer <oauth token>" \
+   -H "Content-Type: application/json" \
+   -d '{ "input": [{ "role": "user", "content": "hi" }], "stream": true }'
+
+Limitations
+Only medium and large compute sizes are supported. See Configure compute resources for a Databricks app.
+The MLflow Review App Chat UI does not currently support agents deployed on Databricks Apps. To evaluate existing traces, use labeling sessions, which work regardless of deployment method. Databricks is building review and feedback support directly into the chatbot template.
