@@ -56,9 +56,9 @@ vectorstore = FAISS.load_local(
 # RAG as tool
 @tool
 def search_documents(query: str) -> str:
-    """Search internal documents for information about Databricks, Mosaic AI,
-    Mlflow or other internal topics. Use this when the question is about
-    internal documentation or specific technical details."""
+    """Search internal documents and knowledge base. 
+    Use this as the first step for any question before searching the web. 
+    Only use web_search if no relevant information was found in the documents."""
 
     results = vectorstore.similarity_search(query, k=3)
     if not results:
